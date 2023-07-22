@@ -8,7 +8,8 @@ import quest.dine.gateway.model.User;
 import reactor.core.publisher.Mono;
 
 @Repository
-    public interface UserRepository extends ReactiveCrudRepository<User, Long> {
+public interface UserRepository extends ReactiveCrudRepository<User, Long> {
     Mono<UserDetails> findByEmail(String email);
+
     Mono<UserDetails> findByUsername(String username);
 }
