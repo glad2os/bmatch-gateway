@@ -1,5 +1,8 @@
 package quest.dine.gateway.services;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,9 +12,6 @@ import quest.dine.gateway.enums.Status;
 import quest.dine.gateway.exceptions.UserAlreadyExistsException;
 import quest.dine.gateway.model.User;
 import quest.dine.gateway.repository.UserRepository;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
 import reactor.core.publisher.Mono;
 
 import java.util.Set;
@@ -57,10 +57,15 @@ public class UserService {
                 });
     }
 
-    public Mono<UserDetails> getUserByEmail(String email, String password) throws BadCredentialsException {
+    public Mono<UserDetails> validateUserByEmailAndPassword(String email, String password) throws BadCredentialsException {
         return userRepository.findByEmail(email)
                 .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials")))
                 .filter(user -> passwordEncoder.matches(password, user.getPassword()))
                 .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials")));
+    }
+
+    public Mono<UserDetails> findUserByEmail(String email) throws BadCredentialsException {
+        return userRepository.findByEmail(email)
+                .switchIfEmpty(Mono.error(new BadCredentialsException("User not found")));
     }
 }

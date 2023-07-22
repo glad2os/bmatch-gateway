@@ -1,6 +1,9 @@
 package quest.dine.gateway.model;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -41,10 +44,15 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        authorities.add(new SimpleGrantedAuthority(role.name()));
+        if (role != null) {
+            authorities.add(new SimpleGrantedAuthority(role.getPermission()));
+        }
 
-        authorities.add(new SimpleGrantedAuthority(status.name()));
+        if (status != null) {
+            authorities.add(new SimpleGrantedAuthority(status.name()));
+        }
 
         return authorities;
     }
+
 }

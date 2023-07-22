@@ -6,7 +6,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+import quest.dine.gateway.services.JwtService;
 import quest.dine.gateway.services.UserService;
 import reactor.core.publisher.Mono;
 
@@ -14,25 +14,20 @@ import reactor.core.publisher.Mono;
 public class AuthenticationManager implements ReactiveAuthenticationManager {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthenticationManager(UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthenticationManager(UserService userService, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
-        String username = authentication.getName();
-        String password = authentication.getCredentials().toString();
+        String email = authentication.getName();
 
-        return userService.getUserByEmail(username, password)
-                .flatMap(userDetails -> {
-                    if (passwordEncoder.matches(password, userDetails.getPassword())) {
-                        return Mono.just((Authentication) new UsernamePasswordAuthenticationToken(username, password, userDetails.getAuthorities()));
-                    } else {
-                        return Mono.empty();
-                    }
-                })
+        return userService.findUserByEmail(email)
+                .flatMap(userDetails -> Mono.just((Authentication) new UsernamePasswordAuthenticationToken(email, null, userDetails.getAuthorities())))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new BadCredentialsException("Invalid credentials"))));
     }
 

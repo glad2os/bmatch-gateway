@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import quest.dine.gateway.enums.PermissionLevel;
 import quest.dine.gateway.enums.Status;
-import quest.dine.gateway.model.User;
 import quest.dine.gateway.repository.UserRepository;
 import reactor.core.publisher.Mono;
 
@@ -28,8 +27,8 @@ public class CustomReactiveUserDetailsService implements ReactiveUserDetailsServ
 
     private Collection<? extends GrantedAuthority> getAuthorities(PermissionLevel role, Status status) {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-        authorities.add(new SimpleGrantedAuthority("STATUS_" + status.name()));
+        authorities.add(new SimpleGrantedAuthority(role.name()));
+        authorities.add(new SimpleGrantedAuthority(status.name()));
         return authorities;
     }
 

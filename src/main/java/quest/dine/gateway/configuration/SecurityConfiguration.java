@@ -8,6 +8,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import quest.dine.gateway.components.AuthenticationManager;
 import quest.dine.gateway.components.SecurityContextRepository;
+import quest.dine.gateway.enums.PermissionLevel;
 import reactor.core.publisher.Mono;
 
 @EnableWebFluxSecurity
@@ -38,8 +39,11 @@ public class SecurityConfiguration {
                 .authenticationManager(authenticationManager)
 
                 .authorizeExchange(ae -> ae
-                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
-                        .pathMatchers("/api/user/**").permitAll()
+                        .pathMatchers("/api/admin/**").hasRole(PermissionLevel.ADMINISTRATOR.name())
+                        .pathMatchers("/api/user/create").permitAll()
+                        .pathMatchers("/api/user/login").permitAll()
+                        .pathMatchers("/api/user/**").hasAuthority(PermissionLevel.VIEWER.getPermission())
+                        .pathMatchers("/api/restaurant/**").hasAuthority(PermissionLevel.VIEWER.getPermission())
                         .pathMatchers("/actuator/health").permitAll()
                         .anyExchange().authenticated())
                 .build();
