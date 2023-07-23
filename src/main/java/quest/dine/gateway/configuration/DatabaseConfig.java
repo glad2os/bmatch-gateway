@@ -40,21 +40,13 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     @Override
     @Bean
     public ConnectionFactory connectionFactory() {
-        String isConsulProduction = consulKV.getKeyValue("isProduction");
-        String dbHost = "";
+        String dbHost;
 
-        if (isConsulProduction == null) {
-            if (!isProduction) {
-                consulKV.setKeyValue("isProduction", "false");
-            }
-        }
-
-        if (isConsulProduction != null) {
-            if (!Boolean.parseBoolean(isConsulProduction)) {
-                dbHost = "localhost";
-            } else {
-                dbHost = dataSourceUrlUpdater.getHost();
-            }
+        if (isProduction) {
+            consulKV.setKeyValue("isProduction", "true");
+            dbHost = dataSourceUrlUpdater.getHost();
+        } else {
+            dbHost = "localhost";
         }
 
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
