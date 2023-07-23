@@ -3,9 +3,6 @@ package quest.dine.gateway.components;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -59,8 +56,7 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
                 return this.authenticationManager.authenticate(auth)
                         .map(SecurityContextImpl::new);
 
-            } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException |
-                     IllegalArgumentException e) {
+            } catch (RuntimeException e) {
                 try {
                     return unauthorizedResponse(exchange, e.getMessage());
                 } catch (JsonProcessingException ex) {

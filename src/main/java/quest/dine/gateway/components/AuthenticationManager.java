@@ -1,34 +1,46 @@
 package quest.dine.gateway.components;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import quest.dine.gateway.services.JwtService;
+import org.springframework.web.server.ResponseStatusException;
 import quest.dine.gateway.services.UserService;
 import reactor.core.publisher.Mono;
 
 @Component
 public class AuthenticationManager implements ReactiveAuthenticationManager {
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
 
-    public AuthenticationManager(UserService userService, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthenticationManager(UserService userService) {
         this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
     }
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
-        String email = authentication.getName();
+        String userId = authentication.getName();
 
-        return userService.findUserByEmail(email)
-                .flatMap(userDetails -> Mono.just((Authentication) new UsernamePasswordAuthenticationToken(email, null, userDetails.getAuthorities())))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new BadCredentialsException("Invalid credentials"))));
+        return userService.findUserById(userId)
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new BadCredentialsException("Invalid credentials"))))
+                .flatMap(userDetails -> {
+                    if (!userDetails.isAccountNonLocked()) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User account is locked"));
+                    }
+                    if (!userDetails.isAccountNonExpired()) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User account has expired"));
+                    }
+                    if (!userDetails.isCredentialsNonExpired()) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User credentials have expired"));
+                    }
+                    if (!userDetails.isEnabled()) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User account disabled"));
+                    }
+                    return Mono.just((Authentication) new UsernamePasswordAuthenticationToken(userId, null, userDetails.getAuthorities()));
+                })
+                .onErrorResume(BadCredentialsException.class, e -> Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bad Credentials")));
     }
+
 
 }

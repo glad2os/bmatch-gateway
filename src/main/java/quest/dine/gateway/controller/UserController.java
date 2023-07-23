@@ -3,12 +3,12 @@ package quest.dine.gateway.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import quest.dine.gateway.dto.ApiResponse;
 import quest.dine.gateway.dto.CreateUserRequest;
 import quest.dine.gateway.dto.LoginRequest;
+import quest.dine.gateway.model.User;
 import quest.dine.gateway.services.JwtService;
 import quest.dine.gateway.services.UserService;
 import reactor.core.publisher.Mono;
@@ -45,7 +45,7 @@ public class UserController {
             String email = createUserRequest.getEmail();
 
             return userService.validateUserByEmailAndPassword(email, password).map(userDetails -> {
-                String token = jwtService.generateToken(email);
+                String token = jwtService.generateToken(String.valueOf(((User) userDetails).getId()));
                 return ResponseEntity.ok(new ApiResponse(token, HttpStatus.OK.value()));
             });
         });
@@ -55,11 +55,11 @@ public class UserController {
     Test auth
      */
 
-//    @GetMapping("/profile")
-//    public Mono<ResponseEntity<UserDetails>> getProfile(Principal principal) {
-//        return userService.findUserByEmail(principal.getName())
-//                .map(ResponseEntity::ok)
-//                .defaultIfEmpty(ResponseEntity.notFound().build());
-//    }
+    @GetMapping("/profile")
+    public Mono<ResponseEntity<User>> getProfile(Principal principal) {
+        return userService.findUserById(principal.getName())
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
 }
