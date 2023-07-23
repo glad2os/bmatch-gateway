@@ -7,7 +7,9 @@ RUN gradle clean build -x test --no-daemon
 
 # Production stage
 FROM openjdk:17-jdk-alpine
-EXPOSE 8080
+EXPOSE 8002
 RUN mkdir /app
+RUN apk update && apk add curl jq
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+COPY wait-for-postgres.sh /app/wait-for-postgres.sh
+RUN ["chmod", "+x", "/app/wait-for-postgres.sh"]
