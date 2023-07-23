@@ -37,6 +37,11 @@ public class UserService {
         user.setRole(PermissionLevel.VIEWER);
         user.setStatus(Status.REGISTERED);
 
+        user.setEnabled(true);
+        user.setAccountNonExpired(true);
+        user.setAccountNonLocked(true);
+        user.setAccountNonLocked(true);
+
         return userRepository.findByEmail(email)
                 .hasElement()
                 .flatMap(exists -> {
@@ -50,7 +55,7 @@ public class UserService {
                         for (ConstraintViolation<User> violation : violations) {
                             errorMessage.append(violation.getMessage()).append("; ");
                         }
-                        return Mono.error(new ValidationException("Validation failed: " + errorMessage.toString()));
+                        return Mono.error(new ValidationException("Validation failed: " + errorMessage));
                     }
 
                     return userRepository.save(user);
@@ -64,8 +69,10 @@ public class UserService {
                 .switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials")));
     }
 
-    public Mono<UserDetails> findUserByEmail(String email) throws BadCredentialsException {
-        return userRepository.findByEmail(email)
+
+    public Mono<User> findUserById(String userId) throws BadCredentialsException {
+        return userRepository.findById(Long.valueOf(userId))
                 .switchIfEmpty(Mono.error(new BadCredentialsException("User not found")));
+
     }
 }
