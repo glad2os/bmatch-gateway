@@ -1,5 +1,6 @@
 package io.bmatch.gateway.controller;
 
+import io.bmatch.gateway.dto.UserProfile;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,8 +59,8 @@ public class UserController {
      */
 
     @GetMapping("/profile")
-    public Mono<ResponseEntity<User>> getProfile(Principal principal) {
-        return userService.findUserById(principal.getName())
+    public Mono<ResponseEntity<UserProfile>> getProfile(Principal principal) {
+        return userService.findUserById(principal.getName()).map(UserProfile::ofUser)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
