@@ -42,8 +42,8 @@ public class SecurityConfiguration {
                         .pathMatchers("/api/admin/**").hasRole(PermissionLevel.ADMINISTRATOR.name())
                         .pathMatchers("/api/user/create").permitAll()
                         .pathMatchers("/api/user/login").permitAll()
-                        .pathMatchers("/api/user/**").hasAuthority(PermissionLevel.VIEWER.getPermission())
-                        .pathMatchers("/api/restaurant/**").hasAuthority(PermissionLevel.VIEWER.getPermission())
+                        .pathMatchers("/api/user/**").hasAuthority(PermissionLevel.PLAYER.getPermission())
+                        .pathMatchers("/api/restaurant/**").hasAuthority(PermissionLevel.PLAYER.getPermission())
                         .pathMatchers("/actuator/health").permitAll()
                         .anyExchange().authenticated())
                 .build();

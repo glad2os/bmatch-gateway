@@ -36,7 +36,7 @@ public class UserService {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);
-        user.setRole(PermissionLevel.VIEWER);
+        user.setRole(PermissionLevel.PLAYER);
         user.setStatus(Status.REGISTERED);
         user.setMmr(2000);
         user.setEnabled(true);

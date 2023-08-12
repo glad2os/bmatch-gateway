@@ -1,9 +1,11 @@
 package io.bmatch.gateway.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum PermissionLevel {
     ADMINISTRATOR("administrator"),
-    EDITOR("editor"),
-    VIEWER("viewer");
+    PLAYER("viewer");
 
     private final String permission;
 
@@ -11,8 +13,5 @@ public enum PermissionLevel {
         this.permission = permission;
     }
 
-    public String getPermission() {
-        return permission;
-    }
 }
 
