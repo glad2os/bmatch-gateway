@@ -4,6 +4,7 @@ import io.bmatch.gateway.dto.UserProfile;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.bmatch.gateway.dto.ApiResponse;
@@ -60,9 +61,14 @@ public class UserController {
 
     @GetMapping("/profile")
     public Mono<ResponseEntity<UserProfile>> getProfile(Principal principal) {
-        return userService.findUserById(principal.getName()).map(UserProfile::ofUser)
+        if (principal == null) {
+            return Mono.just(ResponseEntity.notFound().build());
+        }
+
+        return userService.findUserById(principal.getName())
+                .map(UserProfile::ofUser)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
 }
