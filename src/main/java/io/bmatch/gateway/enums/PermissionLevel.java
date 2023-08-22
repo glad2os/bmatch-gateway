@@ -5,13 +5,13 @@ import lombok.Getter;
 @Getter
 public enum PermissionLevel {
     ADMINISTRATOR("administrator"),
-    PLAYER("viewer");
+    PREMIUM("premium"),
+    PLAYER("player");
 
     private final String permission;
 
     PermissionLevel(String permission) {
         this.permission = permission;
     }
-
 }
 

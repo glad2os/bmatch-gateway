@@ -1,8 +1,6 @@
 package io.bmatch.gateway.enums;
 
 public enum Status {
-    ADMINISTRATOR,
-    PREMIUM,
+    IN_GAME,
     REGISTERED,
-    UNAUTHORIZED
 }

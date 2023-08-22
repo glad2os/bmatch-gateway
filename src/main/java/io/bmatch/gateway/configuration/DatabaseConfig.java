@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
-import io.bmatch.gateway.services.ConsulKV;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 
@@ -17,12 +16,10 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 public class DatabaseConfig extends AbstractR2dbcConfiguration {
 
     private final DataSourceUrlUpdater dataSourceUrlUpdater;
-    private final ConsulKV consulKV;
 
     @Autowired
-    public DatabaseConfig(DataSourceUrlUpdater dataSourceUrlUpdater, ConsulClient client, ConsulClient consulClient, ConsulKV consulKV) {
+    public DatabaseConfig(DataSourceUrlUpdater dataSourceUrlUpdater, ConsulClient client, ConsulClient consulClient) {
         this.dataSourceUrlUpdater = dataSourceUrlUpdater;
-        this.consulKV = consulKV;
     }
 
     @Value("${spring.datasource.username}")
@@ -34,26 +31,23 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     @Value("${spring.datasource.database}")
     private String dbScheme;
 
+    @Value("${spring.datasource.host}")
+    private String dbHost;
+
+
     @Value("${bmatch.isProduction}")
     private boolean isProduction;
 
     @Override
     @Bean
     public ConnectionFactory connectionFactory() {
-        String dbHost;
-
-        if (isProduction) {
-            consulKV.setKeyValue("isProduction", "true");
-            dbHost = dataSourceUrlUpdater.getHost();
-        } else {
-            dbHost = "localhost";
-        }
+        String dbURL = isProduction ? dataSourceUrlUpdater.getHost() : dbHost;
 
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
                 .option(DRIVER, "postgresql")
                 .option(PROTOCOL, "postgresql")
-                .option(HOST, dbHost)
-                .option(PORT, dataSourceUrlUpdater.getPort())
+                .option(HOST, dbURL)
+                .option(PORT, 5432)
                 .option(USER, dbUsername)
                 .option(PASSWORD, dbPassword)
                 .option(DATABASE, dbScheme)
