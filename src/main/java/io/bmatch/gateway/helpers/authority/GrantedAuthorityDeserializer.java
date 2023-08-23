@@ -15,7 +15,7 @@ import java.util.List;
 public class GrantedAuthorityDeserializer extends JsonDeserializer<List<GrantedAuthority>> {
 
     @Override
-    public List<GrantedAuthority> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    public List<GrantedAuthority> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         List<GrantedAuthority> authorities = new ArrayList<>();
         JsonNode nodes = p.getCodec().readTree(p);
 

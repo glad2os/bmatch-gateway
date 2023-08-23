@@ -14,7 +14,7 @@ The `bmatch.gateway` microservice serves as a gateway for various applications, 
 
 ## Security Configurations:  
 * Routes prefixed with `/api/admin/**` require ADMINISTRATOR role.  
-* Paths `/api/user/create`, `/api/user/login`, and /api/user/profile are publicly accessible.  
+* Paths `/api/user/create`, `/api/user/login`, and `/api/user/profile` are publicly accessible.  
 * Access to `/api/user/**` and `/api/restaurant/**` requires PLAYER authority.  
 * `/actuator/health` is publicly accessible for service health checks.  
 

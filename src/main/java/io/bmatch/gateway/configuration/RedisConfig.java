@@ -37,33 +37,32 @@ public class RedisConfig {
     @Primary
     @Bean
     public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
-
-        if (isProduction) {
-            List<ServiceInstance> instances = discoveryClient.getInstances("redis");
-
-            if (instances.isEmpty()) {
-                throw new RuntimeException("Cannot find redis service from Consul");
-            }
-
-            String host = instances.get(0).getHost();
-            int port = instances.get(0).getPort();
-        } else {
-
+        if (!isProduction) {
+            return new LettuceConnectionFactory(redisHost, redisPort);
         }
 
+        List<ServiceInstance> instances = discoveryClient.getInstances("redis");
 
-        return new LettuceConnectionFactory(redisHost, redisPort);
+        if (instances.isEmpty()) {
+            throw new RuntimeException("Cannot find redis service from Consul");
+        }
+
+        String host = instances.get(0).getHost();
+        int port = instances.get(0).getPort();
+
+        return new LettuceConnectionFactory(host, port);
     }
 
 
     @Bean
-    ReactiveRedisTemplate<String, UserProfile> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
+    public ReactiveRedisTemplate<String, UserProfile> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
         Jackson2JsonRedisSerializer<UserProfile> serializer = new Jackson2JsonRedisSerializer<>(UserProfile.class);
-        RedisSerializationContext.RedisSerializationContextBuilder<String, UserProfile> builder =
-                RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
+
+        RedisSerializationContext.RedisSerializationContextBuilder<String, UserProfile> builder = RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
 
         RedisSerializationContext<String, UserProfile> context = builder.value(serializer).build();
 
         return new ReactiveRedisTemplate<>(factory, context);
     }
+
 }

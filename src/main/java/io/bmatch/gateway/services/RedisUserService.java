@@ -1,8 +1,7 @@
 package io.bmatch.gateway.services;
 
 import io.bmatch.gateway.dto.UserProfile;
-import io.bmatch.gateway.model.User;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -11,28 +10,22 @@ import java.time.Duration;
 @Service
 public class RedisUserService {
 
-    private final ReactiveRedisOperations<String, UserProfile> userOps;
+    private final ReactiveRedisTemplate<String, UserProfile> userRedisTemplate;
 
     private final UserService userService;
 
-    public RedisUserService(ReactiveRedisOperations<String, UserProfile> userOps, UserService userService) {
-        this.userOps = userOps;
+    public RedisUserService(UserService userService, ReactiveRedisTemplate<String, UserProfile> userRedisTemplate) {
         this.userService = userService;
+        this.userRedisTemplate = userRedisTemplate;
     }
 
     public Mono<UserProfile> findUserById(String id) {
-        return userOps.opsForValue().get(id)
-                .flatMap(existingUser -> userOps.expire(id, Duration.ofHours(1)).then(Mono.just(existingUser)))
-                .switchIfEmpty(Mono.defer(() -> {
-                    // Обращаемся к источнику данных, если значения нет в Redis
-                    return userService.findUserById(id)
-                            .map(UserProfile::ofUser)
-                            .flatMap(userProfile -> {
-                                // Сохраняем результат в Redis с TTL 1 час
-                                return userOps.opsForValue().set(id, userProfile, Duration.ofHours(1))
-                                        .thenReturn(userProfile);
-                            });
-                }));
+        String key = "user_profile:" + id;
+
+        return userRedisTemplate.opsForValue().get(key).cast(UserProfile.class).flatMap(existingUser -> userRedisTemplate.expire(key, Duration.ofHours(1)).then(Mono.just(existingUser))).switchIfEmpty(Mono.defer(() -> userService.findUserById(id).flatMap(user -> {
+            UserProfile userProfile = UserProfile.ofUser(user);
+            return userRedisTemplate.opsForValue().set(key, userProfile, Duration.ofHours(1)).thenReturn(userProfile);
+        })));
     }
 
 }
