@@ -37,7 +37,8 @@ The microservice configuration uses the following environment variables:
     * `JWT_TOKEN`: Secret key for JWT token. Default - `YourSecretKeyShouldBeVerySecureAndNotPublic`.
 
 * ## SSL Configuration:
-    * `SSL_KEYSTORE`: Keystore password. Default - `mypassword`.  
+    * `SSL_KEYSTORE_PASSWORD`: Keystore password. Default - `mypassword`  
+    * `SSL_KEYSTORE_FILE`: Keystore path. Default - `file:./keystore.jks`  
 
 * ## Consul Configuration:
     * `SPRING_CLOUD_CONSUL_HOST`: Consul host. Default - `localhost`.  
