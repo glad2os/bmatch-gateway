@@ -14,7 +14,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${bmatch.isProduction:false}")
+    @Value("${bmatch.isProduction}")
     private boolean isProduction;
 
     private final DiscoveryClient discoveryClient;
