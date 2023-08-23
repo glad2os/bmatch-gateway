@@ -1,10 +1,10 @@
 package io.bmatch.gateway.controller;
 
 import io.bmatch.gateway.dto.UserProfile;
+import io.bmatch.gateway.services.RedisUserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.bmatch.gateway.dto.ApiResponse;
@@ -23,10 +23,12 @@ import java.security.Principal;
 public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
+    private final RedisUserService redisUserService;
 
-    public UserController(UserService userService, JwtService jwtService) {
+    public UserController(UserService userService, JwtService jwtService, RedisUserService redisUserService) {
         this.userService = userService;
         this.jwtService = jwtService;
+        this.redisUserService = redisUserService;
     }
 
     @PostMapping("/create")
@@ -65,8 +67,7 @@ public class UserController {
             return Mono.just(ResponseEntity.notFound().build());
         }
 
-        return userService.findUserById(principal.getName())
-                .map(UserProfile::ofUser)
+        return redisUserService.findUserById(principal.getName())
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }

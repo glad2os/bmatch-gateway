@@ -1,5 +1,7 @@
 package io.bmatch.gateway.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.bmatch.gateway.helpers.authority.GrantedAuthorityDeserializer;
 import io.bmatch.gateway.helpers.email.ValidEmailFormat;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,7 @@ public class User implements UserDetails {
     private boolean isCredentialsNonExpired;
     private boolean isEnabled;
 
+    @JsonDeserialize(using = GrantedAuthorityDeserializer.class)
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
