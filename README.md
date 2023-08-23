@@ -49,7 +49,7 @@ To generate a self-signed SSL certificate for development or testing:
 ```shell
 keytool -genkeypair -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 365 -alias bmatch.gateway -dname "CN=localhost, OU=MyOrg, O=MyOrg, L=City, ST=State, C=Country" -storepass mypassword -keypass mypassword
 ```
-2. For API testing tools like Insomnia that require a PEM format:
+2. For API testing tools like Insomnia that require a PEM format:  
     a. Export the certificate from keystore in DER format:
     ```shell
     keytool -export -keystore keystore.jks -alias bmatch.gateway -file mycert.der -storepass mypassword
