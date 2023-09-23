@@ -33,12 +33,15 @@ public class CorsConfig {
         corsConfiguration.setAllowCredentials(true);
         if (isProduction) {
             System.out.printf("SVELTE: http://%s:%s%n", instances.get(0).getHost(), instances.get(0).getPort());
-            corsConfiguration.addAllowedOrigin(String.format("http://%s:%s", instances.get(0).getHost(), instances.get(0).getPort()));
+            corsConfiguration.addAllowedOrigin("http://bubblematch.io");
+            corsConfiguration.addAllowedOrigin("https://bubblematch.io");
         } else {
             corsConfiguration.addAllowedOrigin("http://localhost:5173");
             corsConfiguration.addAllowedOrigin("http://127.0.0.1:5173");
+            corsConfiguration.addAllowedOrigin("http://192.168.2.73:5173");
             corsConfiguration.addAllowedOrigin("http://host.docker.internal:5173");
         }
+
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
 

@@ -38,10 +38,12 @@ public class RedisConfig {
     @Bean
     public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
         if (!isProduction) {
+            System.out.println("Connecting to DEV Redis at: " + redisHost + ":" + redisPort);
             return new LettuceConnectionFactory(redisHost, redisPort);
         }
 
         List<ServiceInstance> instances = discoveryClient.getInstances("redis");
+        System.out.println(instances);
 
         if (instances.isEmpty()) {
             throw new RuntimeException("Cannot find redis service from Consul");
@@ -49,6 +51,8 @@ public class RedisConfig {
 
         String host = instances.get(0).getHost();
         int port = instances.get(0).getPort();
+
+        System.out.println("Connecting PROD to Redis at: " + host + ":" + port);
 
         return new LettuceConnectionFactory(host, port);
     }
