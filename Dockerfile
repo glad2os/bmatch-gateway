@@ -11,5 +11,5 @@ EXPOSE 8002
 RUN mkdir /app
 RUN apk update && apk add curl jq
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
-COPY wait-for-postgres.sh /app/wait-for-postgres.sh
+COPY sh/wait-for-postgres.sh /app/wait-for-postgres.sh
 RUN ["chmod", "+x", "/app/wait-for-postgres.sh"]

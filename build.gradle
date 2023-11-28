@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.1.2'
     id 'io.spring.dependency-management' version '1.1.2'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 group = 'io.bmatch'
@@ -9,6 +10,31 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     sourceCompatibility = '17'
+}
+
+jib {
+    from {
+        image = 'gcr.io/distroless/java17-debian12'
+    }
+    to {
+        image = 'glad2os/bmatch-gateway'
+    }
+    container {
+        ports = ['8002']
+        jvmFlags = ['-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005']
+        environment = [ 'SPRING_PROFILES_ACTIVE': 'dev' ]
+    }
+    extraDirectories {
+        paths {
+            path {
+                from = 'sh/'
+                into = '/app'
+            }
+        }
+        permissions = [
+                '/app/wait-for-postgres.sh': '755'
+        ]
+    }
 }
 
 configurations {
