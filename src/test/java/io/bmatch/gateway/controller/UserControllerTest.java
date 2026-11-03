@@ -7,6 +7,7 @@ import io.bmatch.gateway.services.RedisUserService;
 import io.bmatch.gateway.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -52,5 +53,15 @@ class UserControllerTest {
                 .thenReturn(Mono.error(new UserAlreadyExistsException("Already exists")));
         client.post().uri("/api/user/create").bodyValue(body).exchange().expectStatus().isEqualTo(409)
                 .expectBody().jsonPath("$.message").isEqualTo("Already exists").jsonPath("$.statusCode").isEqualTo(409);
+    }
+
+    @Test
+    void rejectsInvalidCredentialsWithUnauthorized() {
+        when(service.validateUserByEmailAndPassword(anyString(), anyString()))
+                .thenReturn(Mono.error(new BadCredentialsException("Invalid credentials")));
+        client.post().uri("/api/user/login").contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("email", "test@example.com", "password", "wrong-pass"))
+                .exchange().expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.message").isEqualTo("Invalid credentials").jsonPath("$.statusCode").isEqualTo(401);
     }
 }

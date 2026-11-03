@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import io.bmatch.gateway.exceptions.UserAlreadyExistsException;
 import org.springframework.web.server.ServerWebInputException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -61,7 +62,9 @@ public class UserController {
                 String token = jwtService.generateToken(String.valueOf(((User) userDetails).getId()));
                 return ResponseEntity.ok(new ApiResponse(token, HttpStatus.OK.value()));
             });
-        });
+        }).onErrorResume(BadCredentialsException.class, error ->
+                Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse(error.getMessage(), HttpStatus.UNAUTHORIZED.value()))));
     }
 
     /*
