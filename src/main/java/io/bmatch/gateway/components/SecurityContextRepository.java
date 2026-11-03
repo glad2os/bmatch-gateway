@@ -21,7 +21,6 @@ import io.bmatch.gateway.services.JwtService;
 import io.bmatch.gateway.services.UserService;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
 
 @Component
 public class SecurityContextRepository implements ServerSecurityContextRepository {
@@ -59,10 +58,6 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
 
         try {
             Claims claimsFromToken = jwtService.getClaimsFromToken(authToken);
-
-            if (claimsFromToken.getExpiration().before(new Date())) {
-                return Mono.error(new RuntimeException(EXPIRED_TOKEN));
-            }
 
             String userId = claimsFromToken.getSubject();
 
