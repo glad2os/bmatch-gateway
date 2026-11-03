@@ -1,8 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.1.2'
-    id 'io.spring.dependency-management' version '1.1.2'
-    id 'com.google.cloud.tools.jib' version '3.4.0'
+    id 'org.springframework.boot' version '3.5.16'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.google.cloud.tools.jib' version '3.5.4'
 }
 
 group = 'io.bmatch'
@@ -47,15 +47,20 @@ repositories {
 }
 
 ext {
-    set('springCloudVersion', "2022.0.3")
+    set('springCloudVersion', "2025.0.3")
 }
+
+// Patch releases newer than those managed by Spring Boot 3.5.16; they fix CVEs reported by trivy.
+ext['netty.version'] = '4.1.139.Final'
+ext['jackson-bom.version'] = '2.21.8'
+ext['log4j2.version'] = '2.25.5'
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
-    implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery:4.0.2'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-r2dbc', version: '3.1.2'
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.postgresql:r2dbc-postgresql'
     implementation group: 'com.ecwid.consul', name: 'consul-api', version: '1.4.5'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -63,21 +68,26 @@ dependencies {
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.15.2'
-    implementation group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '3.1.6'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis-reactive', version: '3.1.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 }
 
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+    dependencies {
+        // Transitive; 1.80.x is affected by CVE-2026-8763 and CVE-2026-13506.
+        dependency 'org.bouncycastle:bcprov-jdk18on:1.86'
     }
 }
 
