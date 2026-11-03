@@ -39,12 +39,12 @@ public class SecurityConfiguration {
                 .authenticationManager(authenticationManager)
 
                 .authorizeExchange(ae -> ae
-                        .pathMatchers("/api/admin/**").hasRole(PermissionLevel.ADMINISTRATOR.name())
+                        .pathMatchers("/api/admin/**").hasAuthority(PermissionLevel.ADMINISTRATOR.getPermission())
                         .pathMatchers("/api/user/create").permitAll()
                         .pathMatchers("/api/user/login").permitAll()
                         .pathMatchers("/api/user/profile").permitAll()
-                        .pathMatchers("/api/user/**").hasAuthority(PermissionLevel.PLAYER.getPermission())
-                        .pathMatchers("/api/restaurant/**").hasAuthority(PermissionLevel.PLAYER.getPermission())
+                        .pathMatchers("/api/user/**").hasAnyAuthority(PermissionLevel.PLAYER.getPermission(),
+                                PermissionLevel.PREMIUM.getPermission(), PermissionLevel.ADMINISTRATOR.getPermission())
                         .pathMatchers("/actuator/health").permitAll()
                         .anyExchange().authenticated())
                 .build();

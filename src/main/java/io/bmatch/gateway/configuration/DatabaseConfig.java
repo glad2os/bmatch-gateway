@@ -1,6 +1,5 @@
 package io.bmatch.gateway.configuration;
 
-import com.ecwid.consul.v1.ConsulClient;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
@@ -18,7 +17,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     private final DataSourceUrlUpdater dataSourceUrlUpdater;
 
     @Autowired
-    public DatabaseConfig(DataSourceUrlUpdater dataSourceUrlUpdater, ConsulClient client, ConsulClient consulClient) {
+    public DatabaseConfig(DataSourceUrlUpdater dataSourceUrlUpdater) {
         this.dataSourceUrlUpdater = dataSourceUrlUpdater;
     }
 
@@ -47,7 +46,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
                 .option(DRIVER, "postgresql")
                 .option(PROTOCOL, "postgresql")
                 .option(HOST, dbURL)
-                .option(PORT, 5432)
+                .option(PORT, isProduction ? dataSourceUrlUpdater.getPort() : 5432)
                 .option(USER, dbUsername)
                 .option(PASSWORD, dbPassword)
                 .option(DATABASE, dbScheme)

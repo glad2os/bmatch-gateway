@@ -1,6 +1,8 @@
 package io.bmatch.gateway.configuration;
 
 import io.bmatch.gateway.dto.UserProfile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -60,7 +62,8 @@ public class RedisConfig {
 
     @Bean
     public ReactiveRedisTemplate<String, UserProfile> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
-        Jackson2JsonRedisSerializer<UserProfile> serializer = new Jackson2JsonRedisSerializer<>(UserProfile.class);
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        Jackson2JsonRedisSerializer<UserProfile> serializer = new Jackson2JsonRedisSerializer<>(mapper, UserProfile.class);
 
         RedisSerializationContext.RedisSerializationContextBuilder<String, UserProfile> builder = RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
 
