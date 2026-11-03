@@ -3,6 +3,9 @@ package io.bmatch.gateway.controller;
 import io.bmatch.gateway.dto.UserProfile;
 import io.bmatch.gateway.services.RedisUserService;
 import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
+import io.bmatch.gateway.exceptions.UserAlreadyExistsException;
+import org.springframework.web.server.ServerWebInputException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -39,9 +42,13 @@ public class UserController {
             String email = createUserRequest.getEmail();
 
             return userService.createUser(username, password, email)
-                    .thenReturn(new ResponseEntity<>(new ApiResponse("User created successfully", HttpStatus.OK.value()), HttpStatus.OK))
-                    .doOnError(throwable -> new ResponseEntity<>(new ApiResponse(throwable.getMessage(), HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST));
-        });
+                    .thenReturn(ResponseEntity.ok(new ApiResponse("User created successfully", HttpStatus.OK.value())));
+        }).onErrorResume(UserAlreadyExistsException.class, error ->
+                Mono.just(ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(new ApiResponse(error.getMessage(), HttpStatus.CONFLICT.value()))))
+          .onErrorResume(error -> error instanceof ServerWebInputException || error instanceof ValidationException,
+                error -> Mono.just(ResponseEntity.badRequest()
+                        .body(new ApiResponse("Invalid registration data", HttpStatus.BAD_REQUEST.value()))));
     }
 
     @PostMapping("/login")

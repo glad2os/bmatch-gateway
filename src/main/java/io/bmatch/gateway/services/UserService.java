@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DuplicateKeyException;
 import io.bmatch.gateway.enums.PermissionLevel;
 import io.bmatch.gateway.enums.Status;
 import reactor.core.publisher.Mono;
@@ -44,9 +45,10 @@ public class UserService {
         user.setAccountNonLocked(true);
         user.setCredentialsNonExpired(true);
 
-        return userRepository.findByEmail(email).hasElement().flatMap(exists -> {
-            if (exists) {
-                return Mono.error(new UserAlreadyExistsException("User with email " + email + " already exists"));
+        return Mono.zip(userRepository.findByEmail(email).hasElement(),
+                        userRepository.findByUsername(username).hasElement()).flatMap(exists -> {
+            if (exists.getT1() || exists.getT2()) {
+                return Mono.error(new UserAlreadyExistsException("Email or username already exists"));
             }
 
             Set<ConstraintViolation<User>> violations = validator.validate(user);
@@ -57,11 +59,12 @@ public class UserService {
             }
 
             return userRepository.save(user);
-        });
+        }).onErrorMap(DuplicateKeyException.class,
+                error -> new UserAlreadyExistsException("Email or username already exists"));
     }
 
     public Mono<UserDetails> validateUserByEmailAndPassword(String email, String password) throws BadCredentialsException {
-        return userRepository.findByEmail(email).switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials"))).filter(user -> passwordEncoder.matches(password, user.getPassword())).switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials")));
+        return userRepository.findByEmail(email).switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials"))).filter(user -> user.isEnabled() && user.isAccountNonLocked() && passwordEncoder.matches(password, user.getPassword())).switchIfEmpty(Mono.error(new BadCredentialsException("Invalid credentials")));
     }
 
     public Mono<User> findUserById(String userId) {
