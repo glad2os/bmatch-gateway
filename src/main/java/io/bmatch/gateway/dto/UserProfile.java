@@ -3,7 +3,10 @@ package io.bmatch.gateway.dto;
 import io.bmatch.gateway.enums.PermissionLevel;
 import io.bmatch.gateway.enums.Status;
 import io.bmatch.gateway.model.User;
+import io.bmatch.gateway.helpers.profile.ProfileLinks;
 import lombok.Data;
+
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @Data
@@ -20,6 +23,12 @@ public class UserProfile {
     private boolean isAccountNonLocked;
     private boolean isCredentialsNonExpired;
     private boolean isEnabled;
+    private String firstName;
+    private String lastName;
+    // ISO date (yyyy-MM-dd); kept as text so the Redis cache needs no Java time module.
+    private String birthday;
+    private List<String> links;
+    private String background;
 
     public UserProfile(Long id, String username, String email, Integer mmr, PermissionLevel role, String tag, Status status, boolean isAccountNonExpired, boolean isAccountNonLocked, boolean isCredentialsNonExpired, boolean isEnabled) {
         this.id = id;
@@ -36,6 +45,12 @@ public class UserProfile {
     }
 
     public static UserProfile ofUser(User user) {
-        return new UserProfile(user.getId(), user.getUsername(), user.getEmail(), user.getMmr(), user.getRole(), user.getTag(), user.getStatus(), user.isAccountNonExpired(), user.isAccountNonLocked(), user.isCredentialsNonExpired(), user.isEnabled());
+        UserProfile profile = new UserProfile(user.getId(), user.getUsername(), user.getEmail(), user.getMmr(), user.getRole(), user.getTag(), user.getStatus(), user.isAccountNonExpired(), user.isAccountNonLocked(), user.isCredentialsNonExpired(), user.isEnabled());
+        profile.setFirstName(user.getFirstName());
+        profile.setLastName(user.getLastName());
+        profile.setBirthday(user.getBirthday() == null ? null : user.getBirthday().toString());
+        profile.setLinks(ProfileLinks.decode(user.getLinks()));
+        profile.setBackground(user.getBackground());
+        return profile;
     }
 }

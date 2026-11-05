@@ -1,6 +1,8 @@
 package io.bmatch.gateway.services;
 
+import io.bmatch.gateway.dto.UpdateProfileRequest;
 import io.bmatch.gateway.exceptions.UserAlreadyExistsException;
+import io.bmatch.gateway.helpers.profile.ProfileLinks;
 import io.bmatch.gateway.model.User;
 import io.bmatch.gateway.repository.UserRepository;
 import jakarta.validation.ConstraintViolation;
@@ -69,6 +71,41 @@ public class UserService {
 
     public Mono<User> findUserById(String userId) {
         return userRepository.findById(Long.valueOf(userId)).switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")));
+    }
+
+    public Mono<User> updateProfile(String userId, UpdateProfileRequest request) {
+        return findUserById(userId).flatMap(user -> {
+            Mono<Boolean> usernameTaken = request.getUsername().equals(user.getUsername()) ? Mono.just(false)
+                    : userRepository.findByUsername(request.getUsername())
+                    .map(other -> !((User) other).getId().equals(user.getId()))
+                    .defaultIfEmpty(false);
+            return usernameTaken.flatMap(taken -> {
+                if (taken) {
+                    return Mono.error(new UserAlreadyExistsException("Username already exists"));
+                }
+                user.setUsername(request.getUsername());
+                user.setFirstName(blankToNull(request.getFirstName()));
+                user.setLastName(blankToNull(request.getLastName()));
+                user.setBirthday(request.getBirthday());
+                user.setLinks(ProfileLinks.encode(request.getLinks()));
+                user.setBackground(request.getBackground());
+                return userRepository.save(user);
+            });
+        }).onErrorMap(DuplicateKeyException.class, error -> new UserAlreadyExistsException("Username already exists"));
+    }
+
+    public Mono<User> changePassword(String userId, String currentPassword, String newPassword) {
+        return findUserById(userId).flatMap(user -> {
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                return Mono.error(new BadCredentialsException("Current password is incorrect"));
+            }
+            user.setPassword(passwordEncoder.encode(newPassword));
+            return userRepository.save(user);
+        });
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
 

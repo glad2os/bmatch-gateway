@@ -60,4 +60,49 @@ class UserServiceTest {
         StepVerifier.create(service.validateUserByEmailAndPassword("test@example.com", "abcdef"))
                 .expectNext(user).verifyComplete();
     }
+
+    @Test
+    void updatesProfileAndRefusesAUsernameOfAnotherUser() {
+        User me = new User();
+        me.setId(7L);
+        me.setUsername("me");
+        User other = new User();
+        other.setId(8L);
+        when(repository.findById(7L)).thenReturn(Mono.just(me));
+        when(repository.findByUsername("other")).thenReturn(Mono.just(other));
+        when(repository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+
+        io.bmatch.gateway.dto.UpdateProfileRequest request = new io.bmatch.gateway.dto.UpdateProfileRequest();
+        request.setUsername("other");
+        StepVerifier.create(service.updateProfile("7", request)).expectError(UserAlreadyExistsException.class).verify();
+
+        request.setUsername("me");
+        request.setFirstName("  Ann ");
+        request.setLastName(" ");
+        request.setLinks(java.util.List.of("https://github.com/ann"));
+        request.setBackground("ocean");
+        StepVerifier.create(service.updateProfile("7", request)).assertNext(saved -> {
+            org.junit.jupiter.api.Assertions.assertEquals("Ann", saved.getFirstName());
+            org.junit.jupiter.api.Assertions.assertNull(saved.getLastName());
+            org.junit.jupiter.api.Assertions.assertEquals("[\"https://github.com/ann\"]", saved.getLinks());
+            org.junit.jupiter.api.Assertions.assertEquals("ocean", saved.getBackground());
+        }).verifyComplete();
+    }
+
+    @Test
+    void changesPasswordOnlyWhenTheCurrentOneMatches() {
+        User me = new User();
+        me.setId(7L);
+        me.setPassword("hash");
+        when(repository.findById(7L)).thenReturn(Mono.just(me));
+        when(repository.save(any(User.class))).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(encoder.matches("wrong", "hash")).thenReturn(false);
+        when(encoder.matches("right", "hash")).thenReturn(true);
+        when(encoder.encode("new-pass")).thenReturn("new-hash");
+
+        StepVerifier.create(service.changePassword("7", "wrong", "new-pass")).expectError(BadCredentialsException.class).verify();
+        StepVerifier.create(service.changePassword("7", "right", "new-pass"))
+                .assertNext(saved -> org.junit.jupiter.api.Assertions.assertEquals("new-hash", saved.getPassword()))
+                .verifyComplete();
+    }
 }
