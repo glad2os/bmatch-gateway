@@ -4,6 +4,7 @@ import io.bmatch.gateway.components.AuthenticationManager;
 import io.bmatch.gateway.components.SecurityContextRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -39,10 +40,14 @@ public class SecurityConfiguration {
                 .authenticationManager(authenticationManager)
 
                 .authorizeExchange(ae -> ae
+                        // CORS preflights carry no Authorization header; CorsWebFilter answers them after security.
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers("/api/admin/**").hasAuthority(PermissionLevel.ADMINISTRATOR.getPermission())
                         .pathMatchers("/api/user/create").permitAll()
                         .pathMatchers("/api/user/login").permitAll()
-                        .pathMatchers("/api/user/profile").permitAll()
+                        // GET returns 404 when signed out; PUT (editing) needs a signed-in user.
+                        .pathMatchers(HttpMethod.GET, "/api/user/profile").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/user/public/**").permitAll()
                         .pathMatchers("/api/user/**").hasAnyAuthority(PermissionLevel.PLAYER.getPermission(),
                                 PermissionLevel.PREMIUM.getPermission(), PermissionLevel.ADMINISTRATOR.getPermission())
                         .pathMatchers("/actuator/health").permitAll()

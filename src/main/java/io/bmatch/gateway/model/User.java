@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import io.bmatch.gateway.enums.PermissionLevel;
 import io.bmatch.gateway.enums.Status;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -40,6 +41,14 @@ public class User implements UserDetails {
     private PermissionLevel role;
     private String tag;
     private Status status;
+
+    private String firstName;
+    private String lastName;
+    private LocalDate birthday;
+    // JSON array of URLs, see ProfileLinks.
+    private String links;
+    // Preset key, see ProfileBackgrounds.
+    private String background;
 
     private boolean isAccountNonExpired;
     private boolean isAccountNonLocked;

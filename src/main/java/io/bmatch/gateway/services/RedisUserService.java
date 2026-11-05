@@ -28,4 +28,10 @@ public class RedisUserService {
         })));
     }
 
+    // Drops cached copies after a profile change: this service's and the game server's
+    // (gameserver:user:<id>, which holds the username shown in games).
+    public Mono<Void> evict(Long id) {
+        return userRedisTemplate.delete("user_profile:" + id, "gameserver:user:" + id).then();
+    }
+
 }
